@@ -1,0 +1,15 @@
+<div class="card login mx-auto">
+    <div class="card-body">
+        <form action="<?= route('users.authenticate') ?>" method="post">
+            <div class="mb-3">
+                <label for="user_email" class="form-label">E-mail</label>
+                <input type="email" class="form-control" id="user_email" name="user[email]" required>
+            </div>
+            <div class="mb-3">
+                <label for="user_password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="user_password" name="user[password]" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+    </div>
+</div>

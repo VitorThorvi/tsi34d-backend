@@ -7,6 +7,9 @@
                     <a class="nav-link" href="<?= route('users.login') ?>">Login</a>
                 </li>
             <?php else : ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= route('dashboard.index') ?>">Painel</a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <?= $this->currentUser()->email ?>

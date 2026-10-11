@@ -133,7 +133,7 @@ class UserTest extends TestCase
 
     public function test_is_admin_should_return_false_by_default(): void
     {
-        $this->assertEquals('user', User::findById($this->user->id)->role);
+        $this->assertEquals('participant', User::findById($this->user->id)->role);
         $this->assertFalse($this->user->isAdmin());
     }
 
@@ -143,6 +143,18 @@ class UserTest extends TestCase
         $this->user->save();
 
         $this->assertTrue(User::findById($this->user->id)->isAdmin());
+    }
+
+    public function test_last_login_at_should_be_null_by_default(): void
+    {
+        $this->assertNull(User::findById($this->user->id)->last_login_at);
+    }
+
+    public function test_register_login_should_set_last_login_at(): void
+    {
+        $this->user->registerLogin();
+
+        $this->assertNotNull(User::findById($this->user->id)->last_login_at);
     }
 
     public function test_update_should_not_change_the_password(): void

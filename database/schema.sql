@@ -5,10 +5,12 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL,
     encrypted_password VARCHAR(255) NOT NULL,
-    avatar_name VARCHAR(65),
-    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    role ENUM('admin', 'participant') NOT NULL DEFAULT 'participant',
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB;
 

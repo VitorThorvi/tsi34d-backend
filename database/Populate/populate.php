@@ -24,4 +24,4 @@ $user = new User([
 ]);
 $user->save();
 
-echo "Usuários criados: {$admin->email} (admin) e {$user->email} (user), senha 123456\n";
+echo "Usuários criados: {$admin->email} (admin) e {$user->email} (participant), senha 123456\n";

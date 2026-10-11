@@ -26,6 +26,14 @@ class DashboardAccessTest extends TestCase
         $this->assertEquals('/login', $response->getHeaderLine('Location'));
     }
 
+    public function test_admin_route_should_redirect_to_login_without_session(): void
+    {
+        $response = $this->client->get('/admin');
+
+        $this->assertEquals(302, $response->getStatusCode());
+        $this->assertEquals('/login', $response->getHeaderLine('Location'));
+    }
+
     public function test_public_route_should_be_accessible_without_session(): void
     {
         $response = $this->client->get('/login');

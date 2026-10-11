@@ -131,6 +131,20 @@ class UserTest extends TestCase
         $this->assertFalse($this->user->authenticate(''));
     }
 
+    public function test_is_admin_should_return_false_by_default(): void
+    {
+        $this->assertEquals('user', User::findById($this->user->id)->role);
+        $this->assertFalse($this->user->isAdmin());
+    }
+
+    public function test_is_admin_should_return_true_for_admin_role(): void
+    {
+        $this->user->role = 'admin';
+        $this->user->save();
+
+        $this->assertTrue(User::findById($this->user->id)->isAdmin());
+    }
+
     public function test_update_should_not_change_the_password(): void
     {
         $this->user->password = '654321';

@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Controllers\AuthenticationsController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -15,4 +16,9 @@ Route::get('/logout', [AuthenticationsController::class, 'destroy'])->name('user
 // Área do usuário (somente autenticados)
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // Área administrativa (somente autenticados com perfil admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard.index');
+    });
 });

@@ -8,6 +8,7 @@ CREATE TABLE users (
     email VARCHAR(50) NOT NULL,
     encrypted_password VARCHAR(255) NOT NULL,
     avatar_name VARCHAR(65),
+    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB;
 

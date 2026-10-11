@@ -10,13 +10,13 @@ use Core\Database\ActiveRecord\Model;
  * @property string $name
  * @property string $email
  * @property string $encrypted_password
- * @property string $avatar_name
  * @property string $role
+ * @property string|null $last_login_at
  */
 class User extends Model
 {
     protected static string $table = 'users';
-    protected static array $columns = ['name', 'email', 'encrypted_password', 'avatar_name', 'role'];
+    protected static array $columns = ['name', 'email', 'encrypted_password', 'role', 'last_login_at'];
 
     protected ?string $password = null;
     protected ?string $password_confirmation = null;
@@ -29,7 +29,7 @@ class User extends Model
         parent::__construct($params);
 
         if ($this->role === null) {
-            $this->role = 'user';
+            $this->role = 'participant';
         }
     }
 
@@ -62,6 +62,11 @@ class User extends Model
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function registerLogin(): bool
+    {
+        return $this->update(['last_login_at' => date('Y-m-d H:i:s')]);
     }
 
     public function __set(string $property, mixed $value): void

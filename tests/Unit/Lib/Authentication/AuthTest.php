@@ -34,6 +34,7 @@ class AuthTest extends TestCase
         Auth::login($this->user);
 
         $this->assertEquals(1, $_SESSION['user']['id']);
+        $this->assertNotNull(User::findById($this->user->id)->last_login_at);
     }
 
     public function test_user(): void

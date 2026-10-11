@@ -38,7 +38,7 @@ class AuthenticationsControllerTest extends ControllerTestCase
         );
 
         $this->assertTrue(Auth::check());
-        $this->assertStringContainsString('Location: /', $response);
+        $this->assertStringContainsString('Location: /dashboard', $response);
     }
 
     public function test_authenticate_with_invalid_credentials_should_not_login(): void

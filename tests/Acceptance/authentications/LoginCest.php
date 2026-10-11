@@ -32,7 +32,7 @@ class LoginCest extends BaseAcceptanceCest
     {
         $page->login('fulano@example.com', '123456');
 
-        $page->seeCurrentUrlEquals('/');
+        $page->seeCurrentUrlEquals('/dashboard');
         $page->see('Login realizado com sucesso!');
         $page->see('fulano@example.com');
     }

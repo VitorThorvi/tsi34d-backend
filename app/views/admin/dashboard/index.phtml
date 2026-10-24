@@ -1,1 +1,5 @@
 <p>Olá, <?= $this->currentUser()->name ?>! Esta área só aparece para administradores.</p>
+
+<div class="list-group">
+    <a class="list-group-item list-group-item-action" href="<?= route('admin.events.index') ?>">Eventos</a>
+</div>

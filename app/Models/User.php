@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Lib\Validations;
+use Core\Database\ActiveRecord\HasMany;
 use Core\Database\ActiveRecord\Model;
 
 /**
@@ -43,6 +44,14 @@ class User extends Model
         if ($this->newRecord()) {
             Validations::passwordConfirmation($this);
         }
+    }
+
+    /**
+     * Eventos criados por este usuário (Administrador).
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class, 'user_id');
     }
 
     public function authenticate(string $password): bool

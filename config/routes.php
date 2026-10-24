@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Controllers\Admin\EventsController as AdminEventsController;
 use App\Controllers\AuthenticationsController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -20,5 +21,17 @@ Route::middleware('auth')->group(function () {
     // Área administrativa (somente autenticados com perfil admin)
     Route::middleware('admin')->group(function () {
         Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard.index');
+
+        // Eventos (CRUD RESTful). 'new' vem antes de '{id}', senão 'new' seria capturado como id.
+        Route::get('/admin/events', [AdminEventsController::class, 'index'])->name('admin.events.index');
+        Route::get('/admin/events/page/{page}', [AdminEventsController::class, 'index'])
+            ->name('admin.events.paginate');
+        Route::get('/admin/events/new', [AdminEventsController::class, 'new'])->name('admin.events.new');
+        Route::post('/admin/events', [AdminEventsController::class, 'create'])->name('admin.events.create');
+        Route::get('/admin/events/{id}', [AdminEventsController::class, 'show'])->name('admin.events.show');
+        Route::get('/admin/events/{id}/edit', [AdminEventsController::class, 'edit'])->name('admin.events.edit');
+        Route::put('/admin/events/{id}', [AdminEventsController::class, 'update'])->name('admin.events.update');
+        Route::delete('/admin/events/{id}', [AdminEventsController::class, 'destroy'])
+            ->name('admin.events.destroy');
     });
 });

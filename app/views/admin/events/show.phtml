@@ -1,0 +1,36 @@
+<?php
+use App\Models\Event;
+
+$audience = array_map(fn(string $value) => Event::AUDIENCES[$value] ?? $value, $event->audienceList());
+?>
+<dl class="row">
+    <dt class="col-sm-3">Título</dt>
+    <dd class="col-sm-9"><?= htmlspecialchars($event->title) ?></dd>
+
+    <dt class="col-sm-3">Descrição</dt>
+    <dd class="col-sm-9"><?= nl2br(htmlspecialchars($event->description)) ?></dd>
+
+    <dt class="col-sm-3">Tipo</dt>
+    <dd class="col-sm-9"><?= Event::KINDS[$event->kind] ?? htmlspecialchars($event->kind) ?></dd>
+
+    <dt class="col-sm-3">Modalidade</dt>
+    <dd class="col-sm-9"><?= Event::MODALITIES[$event->modality] ?? htmlspecialchars($event->modality) ?></dd>
+
+    <dt class="col-sm-3">Público-alvo</dt>
+    <dd class="col-sm-9"><?= htmlspecialchars(implode(', ', $audience)) ?></dd>
+
+    <dt class="col-sm-3">Data</dt>
+    <dd class="col-sm-9"><?= date('d/m/Y', strtotime($event->starts_on)) ?></dd>
+
+    <dt class="col-sm-3">Local</dt>
+    <dd class="col-sm-9"><?= htmlspecialchars($event->location) ?></dd>
+
+    <dt class="col-sm-3">Vagas</dt>
+    <dd class="col-sm-9">
+        <?= $event->enrollmentsCount() ?>/<?= (int) $event->capacity ?>
+        (<?= $event->availableSpots() ?> disponíveis)
+    </dd>
+</dl>
+
+<a class="btn btn-primary" href="<?= route('admin.events.edit', ['id' => $event->id]) ?>">Editar</a>
+<a class="btn btn-secondary" href="<?= route('admin.events.index') ?>">Voltar</a>

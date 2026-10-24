@@ -1,0 +1,93 @@
+<?php
+/**
+ * Formulário compartilhado de new e edit.
+ *
+ * @var \App\Models\Event $event
+ * @var string $action URL de envio
+ * @var bool $isUpdate quando true, envia _method=PUT
+ */
+use App\Models\Event;
+
+$invalid = fn(string $field): string => $event->errors($field) !== null ? ' is-invalid' : '';
+$feedback = fn(string $field, string $extra = ''): string => $event->errors($field) !== null
+    ? '<div class="invalid-feedback' . $extra . '">' . htmlspecialchars($event->errors($field)) . '</div>'
+    : '';
+?>
+<form action="<?= $action ?>" method="post" novalidate>
+    <?php if ($isUpdate) : ?>
+        <input type="hidden" name="_method" value="PUT">
+    <?php endif; ?>
+
+    <div class="mb-3">
+        <label for="event_title" class="form-label">Título</label>
+        <input type="text" class="form-control<?= $invalid('title') ?>" id="event_title" name="event[title]"
+            value="<?= htmlspecialchars((string) $event->title) ?>">
+        <?= $feedback('title') ?>
+    </div>
+
+    <div class="mb-3">
+        <label for="event_description" class="form-label">Descrição</label>
+        <textarea class="form-control<?= $invalid('description') ?>" id="event_description" name="event[description]"
+            rows="4"><?= htmlspecialchars((string) $event->description) ?></textarea>
+        <?= $feedback('description') ?>
+    </div>
+
+    <div class="mb-3">
+        <label for="event_kind" class="form-label">Tipo</label>
+        <select class="form-select<?= $invalid('kind') ?>" id="event_kind" name="event[kind]">
+            <option value="">Selecione</option>
+            <?php foreach (Event::KINDS as $value => $label) : ?>
+                <option value="<?= $value ?>" <?= $event->kind === $value ? 'selected' : '' ?>><?= $label ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?= $feedback('kind') ?>
+    </div>
+
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">Modalidade</legend>
+        <?php foreach (Event::MODALITIES as $value => $label) : ?>
+            <div class="form-check form-check-inline">
+                <input type="radio" class="form-check-input<?= $invalid('modality') ?>" id="event_modality_<?= $value ?>"
+                    name="event[modality]" value="<?= $value ?>" <?= $event->modality === $value ? 'checked' : '' ?>>
+                <label class="form-check-label" for="event_modality_<?= $value ?>"><?= $label ?></label>
+            </div>
+        <?php endforeach; ?>
+        <?= $feedback('modality', ' d-block') ?>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">Público-alvo</legend>
+        <?php foreach (Event::AUDIENCES as $value => $label) : ?>
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input<?= $invalid('audience') ?>" id="event_audience_<?= $value ?>"
+                    name="event[audience][]" value="<?= $value ?>" <?= $event->hasAudience($value) ? 'checked' : '' ?>>
+                <label class="form-check-label" for="event_audience_<?= $value ?>"><?= $label ?></label>
+            </div>
+        <?php endforeach; ?>
+        <?= $feedback('audience', ' d-block') ?>
+    </fieldset>
+
+    <div class="mb-3">
+        <label for="event_starts_on" class="form-label">Data</label>
+        <input type="date" class="form-control<?= $invalid('starts_on') ?>" id="event_starts_on" name="event[starts_on]"
+            value="<?= htmlspecialchars((string) $event->starts_on) ?>">
+        <?= $feedback('starts_on') ?>
+    </div>
+
+    <div class="mb-3">
+        <label for="event_location" class="form-label">Local</label>
+        <input type="text" class="form-control<?= $invalid('location') ?>" id="event_location" name="event[location]"
+            value="<?= htmlspecialchars((string) $event->location) ?>">
+        <?= $feedback('location') ?>
+    </div>
+
+    <div class="mb-3">
+        <label for="event_capacity" class="form-label">Vagas</label>
+        <input type="number" class="form-control<?= $invalid('capacity') ?>" id="event_capacity" name="event[capacity]"
+            min="1" value="<?= htmlspecialchars((string) $event->capacity) ?>">
+        <?= $feedback('capacity') ?>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a class="btn btn-secondary" href="<?= route('admin.events.index') ?>">Cancelar</a>
+</form>

@@ -108,9 +108,17 @@ class Validations
 
     /**
      * A data não pode ser anterior a hoje (hoje é permitido). Data inválida também é rejeitada.
+     *
+     * "Hoje" é o dia civil no fuso padrão do PHP (America/Sao_Paulo na imagem Docker do projeto).
+     * $now existe para os testes fixarem o instante; ele é convertido para o fuso padrão antes de
+     * calcular o dia, então 01:00 UTC de amanhã ainda é "hoje" às 22:00 em Brasília.
      */
-    public static function notPastDate($attribute, $obj, string $format = 'Y-m-d')
-    {
+    public static function notPastDate(
+        $attribute,
+        $obj,
+        string $format = 'Y-m-d',
+        ?\DateTimeImmutable $now = null
+    ) {
         $date = self::parseDate($obj->$attribute, $format);
 
         if ($date === null) {
@@ -118,7 +126,10 @@ class Validations
             return false;
         }
 
-        if ($date < new \DateTimeImmutable('today')) {
+        $timezone = new \DateTimeZone(date_default_timezone_get());
+        $today = ($now ?? new \DateTimeImmutable())->setTimezone($timezone)->setTime(0, 0);
+
+        if ($date < $today) {
             $obj->addError($attribute, 'não pode estar no passado!');
             return false;
         }

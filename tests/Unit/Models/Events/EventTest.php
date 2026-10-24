@@ -490,6 +490,91 @@ class EventTest extends TestCase
         $this->assertEquals(3, $event->availableSpots());
     }
 
+    /* ------------------- starts_on: "não passada" só no create e quando a data muda ------------------- */
+
+    /**
+     * Cria um Evento e move `starts_on` para o passado direto no banco (update não valida),
+     * simulando um Evento que já aconteceu.
+     */
+    private function createPastEvent(): Event
+    {
+        $event = $this->createEvent();
+        $past = date('Y-m-d', strtotime('-10 days'));
+        $this->assertTrue($event->update(['starts_on' => $past]));
+
+        $found = Event::findById($event->id);
+        $this->assertEquals($past, $found->starts_on);
+
+        return $found;
+    }
+
+    public function test_past_event_can_be_edited_when_starts_on_does_not_change(): void
+    {
+        $event = $this->createPastEvent();
+        $past = $event->starts_on;
+
+        $event->description = 'Descrição corrigida depois do evento.';
+
+        $this->assertTrue($event->save());
+        $this->assertNull($event->errors('starts_on'));
+
+        $found = Event::findById($event->id);
+        $this->assertEquals('Descrição corrigida depois do evento.', $found->description);
+        $this->assertEquals($past, $found->starts_on);
+    }
+
+    public function test_past_event_should_reject_a_new_past_starts_on_on_edit(): void
+    {
+        $event = $this->createPastEvent();
+        $original = $event->starts_on;
+
+        $event->starts_on = date('Y-m-d', strtotime('-3 days'));
+
+        $this->assertFalse($event->save());
+        $this->assertEquals('não pode estar no passado!', $event->errors('starts_on'));
+        $this->assertEquals($original, Event::findById($event->id)->starts_on);
+    }
+
+    public function test_past_event_should_accept_a_future_starts_on_on_edit(): void
+    {
+        $event = $this->createPastEvent();
+        $future = date('Y-m-d', strtotime('+5 days'));
+
+        $event->starts_on = $future;
+
+        $this->assertTrue($event->save());
+        $this->assertEquals($future, Event::findById($event->id)->starts_on);
+    }
+
+    public function test_future_event_should_reject_a_past_starts_on_on_edit(): void
+    {
+        $event = $this->createEvent();
+
+        $event->starts_on = date('Y-m-d', strtotime('-1 day'));
+
+        $this->assertFalse($event->save());
+        $this->assertEquals('não pode estar no passado!', $event->errors('starts_on'));
+    }
+
+    public function test_past_starts_on_should_still_be_rejected_on_create(): void
+    {
+        $event = new Event($this->params(['starts_on' => date('Y-m-d', strtotime('-10 days'))]));
+
+        $this->assertFalse($event->save());
+        $this->assertEquals('não pode estar no passado!', $event->errors('starts_on'));
+        $this->assertCount(0, Event::all());
+    }
+
+    public function test_invalid_starts_on_should_still_be_rejected_on_edit_of_a_past_event(): void
+    {
+        $event = $this->createPastEvent();
+
+        $event->starts_on = '2030-02-30';
+
+        $this->assertFalse($event->save());
+        $this->assertEquals('não é uma data válida!', $event->errors('starts_on'));
+    }
+
     /* ------------------- P02: capacity >= Inscrições ------------------- */
 
     public function test_capacity_below_enrollments_should_be_invalid_on_edit(): void

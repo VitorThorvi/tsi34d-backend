@@ -74,11 +74,28 @@ class Event extends Model
 
         Validations::notEmpty('starts_on', $this) &&
             Validations::validDate('starts_on', $this) &&
-            Validations::notPastDate('starts_on', $this);
+            $this->validatesStartsOnNotPast();
 
         if (Validations::notEmpty('capacity', $this) && Validations::integerMin('capacity', $this, 1)) {
             $this->validatesCapacityAgainstEnrollments();
         }
+    }
+
+    /**
+     * A data não pode estar no passado ao criar. Na edição, só é cobrada quando `starts_on` muda:
+     * assim um Evento que já aconteceu ainda pode ter a descrição, o local etc. corrigidos.
+     */
+    private function validatesStartsOnNotPast(): void
+    {
+        if (!$this->newRecord()) {
+            $original = self::findById($this->id);
+
+            if ($original !== null && $original->starts_on === $this->starts_on) {
+                return;
+            }
+        }
+
+        Validations::notPastDate('starts_on', $this);
     }
 
     /**

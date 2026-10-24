@@ -124,4 +124,47 @@ class NumberAndDateValidationsTest extends TestCase
         $this->model->day = date('d/m/Y', strtotime('-2 days')); // @phpstan-ignore-line
         $this->assertFalse(Validations::notPastDate('day', $this->model, 'd/m/Y'));
     }
+
+    /* ------------------- fuso America/Sao_Paulo ------------------- */
+
+    public function test_php_timezone_should_be_sao_paulo(): void
+    {
+        $this->assertSame('America/Sao_Paulo', ini_get('date.timezone'));
+        $this->assertSame('America/Sao_Paulo', date_default_timezone_get());
+    }
+
+    public function test_not_past_date_should_accept_today_in_brasilia_when_utc_is_already_tomorrow(): void
+    {
+        // 22:30 de 23/10 em Brasília (UTC-3) já é 01:30 de 24/10 em UTC.
+        $now = new \DateTimeImmutable('2026-10-24 01:30:00', new \DateTimeZone('UTC'));
+        $original = date_default_timezone_get();
+        date_default_timezone_set('America/Sao_Paulo');
+
+        try {
+            $this->model->day = '2026-10-23'; // @phpstan-ignore-line
+            $this->assertTrue(Validations::notPastDate('day', $this->model, 'Y-m-d', $now));
+            $this->assertFalse($this->model->hasErrors());
+
+            $this->model->day = '2026-10-22'; // @phpstan-ignore-line
+            $this->assertFalse(Validations::notPastDate('day', $this->model, 'Y-m-d', $now));
+            $this->assertEquals('não pode estar no passado!', $this->model->errors('day'));
+        } finally {
+            date_default_timezone_set($original);
+        }
+    }
+
+    public function test_not_past_date_in_utc_would_reject_today_in_brasilia(): void
+    {
+        // Mesmo instante do teste anterior, com o fuso padrão em UTC: é o defeito que o fuso fixo evita.
+        $now = new \DateTimeImmutable('2026-10-24 01:30:00', new \DateTimeZone('UTC'));
+        $original = date_default_timezone_get();
+        date_default_timezone_set('UTC');
+
+        try {
+            $this->model->day = '2026-10-23'; // @phpstan-ignore-line
+            $this->assertFalse(Validations::notPastDate('day', $this->model, 'Y-m-d', $now));
+        } finally {
+            date_default_timezone_set($original);
+        }
+    }
 }

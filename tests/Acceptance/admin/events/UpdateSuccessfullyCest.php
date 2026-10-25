@@ -41,9 +41,9 @@ class UpdateSuccessfullyCest extends BaseEventsCest
         $this->fillEventForm($page, $data);
         $page->click('Salvar');
 
-        $page->seeCurrentUrlEquals('/admin/events');
+        $page->seeCurrentUrlEquals("/admin/events/{$event->id}");
         $page->see('Evento atualizado com sucesso!');
-        $page->see($data['title'], 'table');
+        $page->see($data['title'], 'h1');
 
         $stored = Event::findById((int) $event->id);
         Assert::assertNotNull($stored);

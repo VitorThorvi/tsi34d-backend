@@ -94,7 +94,7 @@ class EventsControllerTest extends ControllerTestCase
         $this->assertNotNull($event);
         $this->assertEquals($this->admin->id, $event->user_id);
         $this->assertEquals(['students', 'staff'], $event->audienceList());
-        $this->assertStringContainsString('Location: /admin/events', $response);
+        $this->assertSame("Location: /admin/events/{$event->id}", $response);
         $this->assertEquals('Evento cadastrado com sucesso!', $_SESSION['flash']['success']);
     }
 
@@ -164,7 +164,7 @@ class EventsControllerTest extends ControllerTestCase
     {
         $response = $this->get(action: 'show', controllerName: self::CONTROLLER, params: ['id' => 9999]);
 
-        $this->assertStringContainsString('Location: /admin/events', $response);
+        $this->assertSame('Location: /admin/events', $response);
         $this->assertEquals('Evento não encontrado!', $_SESSION['flash']['danger']);
     }
 
@@ -202,7 +202,7 @@ class EventsControllerTest extends ControllerTestCase
         $this->assertEquals('Título Novo', $updated->title);
         $this->assertEquals(40, $updated->capacity);
         $this->assertEquals($this->admin->id, $updated->user_id);
-        $this->assertStringContainsString('Location: /admin/events', $response);
+        $this->assertSame("Location: /admin/events/{$event->id}", $response);
         $this->assertEquals('Evento atualizado com sucesso!', $_SESSION['flash']['success']);
     }
 
@@ -246,7 +246,7 @@ class EventsControllerTest extends ControllerTestCase
         $response = $this->delete(action: 'destroy', controllerName: self::CONTROLLER, params: ['id' => $event->id]);
 
         $this->assertNull(Event::findById($event->id));
-        $this->assertStringContainsString('Location: /admin/events', $response);
+        $this->assertSame('Location: /admin/events', $response);
         $this->assertEquals('Evento removido com sucesso!', $_SESSION['flash']['success']);
     }
 
@@ -258,7 +258,7 @@ class EventsControllerTest extends ControllerTestCase
         $response = $this->delete(action: 'destroy', controllerName: self::CONTROLLER, params: ['id' => $event->id]);
 
         $this->assertNotNull(Event::findById($event->id));
-        $this->assertStringContainsString('Location: /admin/events', $response);
+        $this->assertSame('Location: /admin/events', $response);
         $this->assertEquals(
             'não é possível remover um evento com inscrições (1)!',
             $_SESSION['flash']['danger']

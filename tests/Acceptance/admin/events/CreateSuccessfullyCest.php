@@ -21,17 +21,19 @@ class CreateSuccessfullyCest extends BaseEventsCest
         $this->fillEventForm($page, $data);
         $page->click('Salvar');
 
-        $page->seeCurrentUrlEquals('/admin/events');
+        // O redirect vai para o show do Evento novo, com o flash e os dados à vista.
+        $event = Event::findBy(['title' => $data['title']]);
+        Assert::assertNotNull($event);
+        $page->seeCurrentUrlEquals("/admin/events/{$event->id}");
         $page->see('Evento cadastrado com sucesso!');
-        $page->see('Eventos', 'h1');
+        $page->see($data['title'], 'h1');
+        $page->see($data['location']);
 
         // O Evento novo vai para o fim da listagem (ordem do banco): 17 Eventos, 4ª página.
         $page->amOnPage('/admin/events/page/4');
         $page->see($data['title'], 'table');
         $page->see('Mostrando 16 - 17 de 17');
 
-        $event = Event::findBy(['title' => $data['title']]);
-        Assert::assertNotNull($event);
         Assert::assertCount(self::TOTAL_EVENTS + 1, Event::all());
         Assert::assertEquals($this->admin->id, $event->user_id);
         Assert::assertSame($data['description'], $event->description);

@@ -54,7 +54,7 @@ class EventsController extends Controller
 
         if ($event->save()) {
             FlashMessage::success('Evento cadastrado com sucesso!');
-            $this->redirectTo(route('admin.events.index'));
+            $this->redirectTo(route('admin.events.show', ['id' => $event->id]));
         } else {
             FlashMessage::danger('Existem dados incorretos! Por favor, verifique!');
             $title = 'Novo Evento';
@@ -85,7 +85,7 @@ class EventsController extends Controller
 
         if ($event->save()) {
             FlashMessage::success('Evento atualizado com sucesso!');
-            $this->redirectTo(route('admin.events.index'));
+            $this->redirectTo(route('admin.events.show', ['id' => $event->id]));
         } else {
             FlashMessage::danger('Existem dados incorretos! Por favor, verifique!');
             $title = 'Editar Evento';

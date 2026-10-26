@@ -59,6 +59,14 @@ abstract class ControllerTestCase extends TestCase
     /**
      * @param array<string, mixed> $params
      */
+    public function delete(string $action, string $controllerName, array $params = []): string
+    {
+        return $this->execController($action, $controllerName, $params);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
     private function execController(string $action, string $controllerName, array $params = []): string
     {
         $controller = $this->getControllerInstance($controllerName);

@@ -1,0 +1,41 @@
+<div class="mb-3">
+    <a class="btn btn-primary" href="<?= route('admin.events.new') ?>">Novo Evento</a>
+</div>
+
+<?php if (empty($events)) : ?>
+    <p>Nenhum evento cadastrado.</p>
+<?php else : ?>
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Data</th>
+                <th>Local</th>
+                <th>Vagas</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($events as $event) : ?>
+                <tr>
+                    <td><?= htmlspecialchars($event->title) ?></td>
+                    <td><?= \App\Models\Event::KINDS[$event->kind] ?? htmlspecialchars($event->kind) ?></td>
+                    <td><?= date('d/m/Y', strtotime($event->starts_on)) ?></td>
+                    <td><?= htmlspecialchars($event->location) ?></td>
+                    <td><?= $event->enrollmentsCount() ?>/<?= (int) $event->capacity ?></td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary" href="<?= route('admin.events.show', ['id' => $event->id]) ?>">Ver</a>
+                        <a class="btn btn-sm btn-outline-primary" href="<?= route('admin.events.edit', ['id' => $event->id]) ?>">Editar</a>
+                        <form class="d-inline" action="<?= route('admin.events.destroy', ['id' => $event->id]) ?>" method="post">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <?php $paginator->renderPagesNavigation(); ?>
+<?php endif; ?>

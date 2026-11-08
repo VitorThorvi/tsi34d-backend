@@ -4,7 +4,9 @@ namespace Tests\Unit\Models\Events;
 
 use App\Models\Enrollment;
 use App\Models\Event;
+use App\Models\EventFile;
 use App\Models\User;
+use Core\Constants\Constants;
 use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -680,5 +682,151 @@ class EventTest extends TestCase
         $this->expectException(PDOException::class);
 
         $event->destroy();
+    }
+
+    /* ------------------- Anexos (relação 1xN) ------------------- */
+
+    private function uploadsFolder(Event $event): string
+    {
+        return (string) Constants::rootPath()->join("/public/assets/uploads/events/{$event->id}");
+    }
+
+    /**
+     * Cria um Anexo com um arquivo temporário real em uploads/events/{id}/.
+     */
+    private function attach(Event $event, string $name = 'cartaz.png'): EventFile
+    {
+        $file = new EventFile([
+            'event_id' => $event->id,
+            'name' => $name,
+            'path' => "/assets/uploads/events/{$event->id}/" . bin2hex(random_bytes(8)) . '.png',
+            'mime_type' => 'image/png',
+        ]);
+        $this->assertTrue($file->save());
+
+        if (!is_dir(dirname($file->absolutePath()))) {
+            mkdir(dirname($file->absolutePath()), 0775, true);
+        }
+        file_put_contents($file->absolutePath(), 'conteudo');
+
+        return $file;
+    }
+
+    public function tearDown(): void
+    {
+        $events = (string) Constants::rootPath()->join('/public/assets/uploads/events');
+
+        foreach (glob($events . '/*', GLOB_ONLYDIR) ?: [] as $folder) {
+            array_map('unlink', glob($folder . '/*') ?: []);
+            rmdir($folder);
+        }
+
+        parent::tearDown();
+    }
+
+    public function test_files_should_return_only_the_attachments_of_the_event(): void
+    {
+        $event = $this->createEvent();
+        $other = $this->createEvent(['title' => 'Outro evento']);
+        $this->attach($event, 'a.png');
+        $this->attach($event, 'b.png');
+        $this->attach($other, 'c.png');
+
+        $names = [];
+        foreach ($event->files()->get() as $file) {
+            /** @var EventFile $file */
+            $names[] = $file->name;
+        }
+        sort($names);
+
+        $this->assertSame(['a.png', 'b.png'], $names);
+        $this->assertCount(2, $event->files);
+        $this->assertCount(1, $other->files);
+    }
+
+    public function test_files_should_be_empty_for_an_event_without_attachments(): void
+    {
+        $event = $this->createEvent();
+
+        $this->assertSame([], $event->files);
+    }
+
+    public function test_safe_destroy_should_remove_attachments_rows_and_files_from_disk(): void
+    {
+        $event = $this->createEvent();
+        $first = $this->attach($event, 'a.png');
+        $second = $this->attach($event, 'b.png');
+        $paths = [$first->absolutePath(), $second->absolutePath()];
+        $ids = [$first->id, $second->id];
+        foreach ($paths as $path) {
+            $this->assertFileExists($path);
+        }
+
+        $this->assertTrue($event->safeDestroy());
+
+        $this->assertNull(Event::findById($event->id));
+        foreach ($ids as $id) {
+            $this->assertNull(EventFile::findById($id));
+        }
+        foreach ($paths as $path) {
+            $this->assertFileDoesNotExist($path);
+        }
+        $this->assertDirectoryDoesNotExist($this->uploadsFolder($event));
+    }
+
+    public function test_safe_destroy_should_not_touch_attachments_of_other_events(): void
+    {
+        $event = $this->createEvent();
+        $other = $this->createEvent(['title' => 'Outro evento']);
+        $this->attach($event);
+        $kept = $this->attach($other);
+
+        $this->assertTrue($event->safeDestroy());
+
+        $this->assertNotNull(EventFile::findById($kept->id));
+        $this->assertFileExists($kept->absolutePath());
+    }
+
+    public function test_safe_destroy_should_keep_attachments_when_the_event_has_enrollments(): void
+    {
+        $event = $this->createEvent();
+        $this->enroll($event, 1);
+        $file = $this->attach($event);
+
+        $this->assertFalse($event->safeDestroy());
+
+        $this->assertNotNull(EventFile::findById($file->id));
+        $this->assertFileExists($file->absolutePath());
+    }
+
+    public function test_safe_destroy_should_work_for_an_event_without_attachments_or_folder(): void
+    {
+        $event = $this->createEvent();
+
+        $this->assertTrue($event->safeDestroy());
+    }
+
+    public function test_plain_destroy_should_cascade_attachment_rows_in_the_database(): void
+    {
+        $event = $this->createEvent();
+        $file = $this->attach($event);
+
+        $this->assertTrue($event->destroy());
+
+        $this->assertNull(EventFile::findById($file->id));
+    }
+
+    public function test_attachment_for_a_nonexistent_event_should_be_rejected_by_the_foreign_key(): void
+    {
+        $file = new EventFile([
+            'event_id' => 9999,
+            'name' => 'cartaz.png',
+            'path' => '/assets/uploads/events/9999/x.png',
+            'mime_type' => 'image/png',
+        ]);
+
+        $this->expectException(PDOException::class);
+
+        $file->save();
     }
 }

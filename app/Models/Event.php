@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Core\Constants\Constants;
 use Core\Database\ActiveRecord\BelongsTo;
+use Core\Database\ActiveRecord\HasMany;
 use Core\Database\ActiveRecord\Model;
 use Lib\Validations;
 use PDOException;
@@ -18,6 +20,7 @@ use PDOException;
  * @property string $starts_on
  * @property string $location
  * @property int|string $capacity
+ * @property array<int, EventFile> $files Anexos do Evento (relação files())
  */
 class Event extends Model
 {
@@ -120,6 +123,40 @@ class Event extends Model
     }
 
     /**
+     * Anexos (imagens) do Evento: relação 1xN com EventFile.
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(EventFile::class, 'event_id');
+    }
+
+    /**
+     * Pasta pública dos Anexos deste Evento, no disco.
+     */
+    private function uploadsFolder(): string
+    {
+        return (string) Constants::rootPath()->join("/public/assets/uploads/events/{$this->id}");
+    }
+
+    /**
+     * Apaga do disco os arquivos dos Anexos e a pasta do Evento (a FK já removeu as linhas).
+     */
+    private function removeUploadsFromDisk(): void
+    {
+        $folder = $this->uploadsFolder();
+
+        foreach (glob($folder . '/*') ?: [] as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+
+        if (is_dir($folder)) {
+            rmdir($folder);
+        }
+    }
+
+    /**
      * Total de Inscrições (linhas em event_user) deste Evento.
      */
     public function enrollmentsCount(): int
@@ -146,7 +183,8 @@ class Event extends Model
 
     /**
      * Remove o Evento sem lançar exceção (P03): se houver Inscrições, não remove,
-     * retorna false e registra o motivo em errors('base').
+     * retorna false e registra o motivo em errors('base'). Ao remover, os Anexos somem
+     * do banco (FK ON DELETE CASCADE) e seus arquivos e a pasta uploads/events/{id}/ somem do disco.
      */
     public function safeDestroy(): bool
     {
@@ -164,12 +202,19 @@ class Event extends Model
         }
 
         try {
-            return $this->destroy();
+            $destroyed = $this->destroy();
         } catch (PDOException $e) {
             // FK RESTRICT: alguém se inscreveu entre a contagem e o DELETE.
             $this->addError('base', 'não foi possível remover o evento, pois ele possui inscrições!');
             return false;
         }
+
+        // Só depois do DELETE: se ele falhar, os arquivos dos Anexos continuam no disco.
+        if ($destroyed) {
+            $this->removeUploadsFromDisk();
+        }
+
+        return $destroyed;
     }
 
     /**

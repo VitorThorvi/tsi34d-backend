@@ -4,6 +4,7 @@ namespace Tests\Integration\Controllers\Admin;
 
 use App\Models\Enrollment;
 use App\Models\Event;
+use App\Models\EventFile;
 use App\Models\User;
 use Lib\Authentication\Auth;
 use Tests\Integration\Controllers\ControllerTestCase;
@@ -158,6 +159,44 @@ class EventsControllerTest extends ControllerTestCase
         $this->assertStringContainsString('Palestra Final', $response);
         $this->assertStringContainsString('1/4', $response);
         $this->assertStringContainsString("/admin/events/{$event->id}/edit", $response);
+    }
+
+    public function test_show_without_files_shows_upload_form_and_empty_state(): void
+    {
+        $event = $this->createEvent();
+
+        $response = $this->get(action: 'show', controllerName: self::CONTROLLER, params: ['id' => $event->id]);
+
+        $this->assertStringContainsString('Anexos', $response);
+        $this->assertStringContainsString('Nenhum anexo', $response);
+        $this->assertStringContainsString('enctype="multipart/form-data"', $response);
+        $this->assertStringContainsString("action=\"/admin/events/{$event->id}/files\"", $response);
+        $this->assertStringContainsString('type="file"', $response);
+        $this->assertStringContainsString('name="file"', $response);
+        $this->assertStringContainsString('accept="image/jpeg,image/png"', $response);
+        $this->assertStringContainsString('Enviar', $response);
+    }
+
+    public function test_show_lists_files_with_thumbnail_name_date_and_remove_button(): void
+    {
+        $event = $this->createEvent();
+        $file = new EventFile([
+            'event_id' => $event->id,
+            'name' => '<b>cartaz</b>.png',
+            'path' => "/assets/uploads/events/{$event->id}/abc.png",
+            'mime_type' => 'image/png',
+        ]);
+        $file->save();
+
+        $response = $this->get(action: 'show', controllerName: self::CONTROLLER, params: ['id' => $event->id]);
+
+        $this->assertStringNotContainsString('Nenhum anexo', $response);
+        $this->assertStringContainsString("src=\"/assets/uploads/events/{$event->id}/abc.png\"", $response);
+        $this->assertStringContainsString('&lt;b&gt;cartaz&lt;/b&gt;.png', $response);
+        $this->assertStringNotContainsString('<b>cartaz</b>', $response);
+        $this->assertStringContainsString("action=\"/admin/events/{$event->id}/files/{$file->id}\"", $response);
+        $this->assertStringContainsString('name="_method" value="DELETE"', $response);
+        $this->assertStringContainsString('Remover', $response);
     }
 
     public function test_show_with_unknown_id_redirects_to_index(): void

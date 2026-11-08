@@ -34,8 +34,10 @@ class EventsController extends Controller
             return;
         }
 
+        $files = $event->files;
+
         $title = htmlspecialchars($event->title);
-        $this->render('admin/events/show', compact('event', 'title'));
+        $this->render('admin/events/show', compact('event', 'files', 'title'));
     }
 
     public function new(): void

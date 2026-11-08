@@ -1,6 +1,7 @@
 SET foreign_key_checks = 0;
 
 DROP TABLE IF EXISTS event_user;
+DROP TABLE IF EXISTS event_files;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS users;
 
@@ -50,6 +51,19 @@ CREATE TABLE event_user (
         ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_event_user_user FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- Anexo (RF06): imagem pertencente a um Evento; relação 1xN da Entrega 4.3.
+-- ON DELETE CASCADE: remover o Evento apaga os Anexos; a aplicação apaga os arquivos do disco.
+CREATE TABLE event_files (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    event_id   INT NOT NULL,
+    name       VARCHAR(255) NOT NULL,  -- nome original enviado (cartaz.png)
+    path       VARCHAR(255) NOT NULL,  -- caminho público: /assets/uploads/events/{event_id}/{nome gerado}.png
+    mime_type  VARCHAR(100) NOT NULL,  -- image/jpeg ou image/png, verificado pelo conteúdo
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_event_files_event FOREIGN KEY (event_id) REFERENCES events (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 SET foreign_key_checks = 1;

@@ -16,6 +16,7 @@
     <!-- Directories to exclude from the check (for Laravel) -->
     <exclude-pattern>/database/</exclude-pattern>
     <exclude-pattern>/vendor/</exclude-pattern>
+    <exclude-pattern>/tests/files/</exclude-pattern>
     <exclude-pattern>/tests/Support/_generated/</exclude-pattern>
 
     <!-- Allow snake_case method names in classes that end with "Test" -->

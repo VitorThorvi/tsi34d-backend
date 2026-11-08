@@ -11,6 +11,7 @@ parameters:
     - tests/Acceptance/_output/*
     - tests/Support/_generated/*
     - tests/Support/Data/*
+    - tests/files/*
 
   ignoreErrors:
     - '#Unsafe usage of new static\(\)\.#'

@@ -137,6 +137,69 @@ class Validations
         return true;
     }
 
+    /**
+     * Tamanho do arquivo enviado (item de $_FILES, chave `size`, em bytes) até $maxBytes.
+     *
+     * O erro vai para $attribute do objeto; o arquivo não precisa ser coluna do model.
+     *
+     * @param array<string, mixed> $file
+     */
+    public static function fileMaxSize($attribute, $obj, array $file, int $maxBytes)
+    {
+        $size = $file['size'] ?? null;
+
+        if (!is_int($size) || $size < 0 || $size > $maxBytes) {
+            $obj->addError($attribute, 'deve ter no máximo ' . self::formatBytes($maxBytes) . '!');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Extensão do nome original (item de $_FILES, chave `name`) dentro da lista, sem diferenciar
+     * maiúsculas. Vale só a última extensão (`foto.png.php` é `php`). Isto olha o nome informado
+     * pelo cliente: quem precisa de segurança também confere o conteúdo (finfo) do arquivo.
+     *
+     * @param array<string, mixed> $file
+     * @param array<int, string> $allowed
+     */
+    public static function fileExtension($attribute, $obj, array $file, array $allowed)
+    {
+        $name = $file['name'] ?? null;
+        $extension = is_string($name) ? strtolower(pathinfo($name, PATHINFO_EXTENSION)) : '';
+
+        if ($extension === '' || !in_array($extension, $allowed, true)) {
+            $obj->addError($attribute, 'deve ter a extensão ' . self::joinWithOr($allowed) . '!');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<int, string> $items
+     */
+    private static function joinWithOr(array $items): string
+    {
+        $last = array_pop($items);
+
+        return $items === [] ? (string) $last : implode(', ', $items) . ' ou ' . $last;
+    }
+
+    private static function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1048576 && $bytes % 1048576 === 0) {
+            return ($bytes / 1048576) . ' MB';
+        }
+
+        if ($bytes >= 1024 && $bytes % 1024 === 0) {
+            return ($bytes / 1024) . ' KB';
+        }
+
+        return $bytes . ' bytes';
+    }
+
     private static function parseDate(mixed $value, string $format): ?\DateTimeImmutable
     {
         if (!is_string($value) || $value === '') {

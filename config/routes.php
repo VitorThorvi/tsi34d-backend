@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Controllers\Admin\EventFilesController as AdminEventFilesController;
 use App\Controllers\Admin\EventsController as AdminEventsController;
 use App\Controllers\AuthenticationsController;
 use App\Controllers\DashboardController;
@@ -33,5 +34,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/events/{id}', [AdminEventsController::class, 'update'])->name('admin.events.update');
         Route::delete('/admin/events/{id}', [AdminEventsController::class, 'destroy'])
             ->name('admin.events.destroy');
+
+        // Anexos do Evento (upload e remoção; a listagem fica na própria página do Evento).
+        Route::post('/admin/events/{id}/files', [AdminEventFilesController::class, 'create'])
+            ->name('admin.events.files.create');
+        Route::delete('/admin/events/{id}/files/{file_id}', [AdminEventFilesController::class, 'destroy'])
+            ->name('admin.events.files.destroy');
     });
 });

@@ -1,5 +1,9 @@
 <?php
 use App\Models\Event;
+use App\Models\EventFile;
+use App\Services\EventFileUpload;
+
+/** @var array<int, EventFile> $files */
 
 $audience = array_map(fn(string $value) => Event::AUDIENCES[$value] ?? $value, $event->audienceList());
 ?>
@@ -34,3 +38,46 @@ $audience = array_map(fn(string $value) => Event::AUDIENCES[$value] ?? $value, $
 
 <a class="btn btn-primary" href="<?= route('admin.events.edit', ['id' => $event->id]) ?>">Editar</a>
 <a class="btn btn-secondary" href="<?= route('admin.events.index') ?>">Voltar</a>
+
+<section class="mt-5" id="anexos">
+    <h2 class="h4">Anexos</h2>
+
+    <form class="row g-2 align-items-center mb-4" method="post" enctype="multipart/form-data"
+          action="<?= route('admin.events.files.create', ['id' => $event->id]) ?>">
+        <div class="col-auto">
+            <label class="visually-hidden" for="event_file">Arquivo</label>
+            <input class="form-control" type="file" id="event_file" name="file" accept="image/jpeg,image/png">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+        <div class="col-12 form-text">
+            JPEG ou PNG, até <?= EventFileUpload::MAX_SIZE / 1024 / 1024 ?> MB.
+        </div>
+    </form>
+
+    <?php if (empty($files)) : ?>
+        <p class="text-muted">Nenhum anexo.</p>
+    <?php else : ?>
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            <?php foreach ($files as $file) : ?>
+                <div class="col">
+                    <div class="card h-100">
+                        <a href="<?= htmlspecialchars($file->path) ?>" target="_blank" rel="noopener">
+                            <img class="card-img-top" style="height: 160px; object-fit: cover;"
+                                 src="<?= htmlspecialchars($file->path) ?>" alt="<?= htmlspecialchars($file->name) ?>">
+                        </a>
+                        <div class="card-body">
+                            <p class="card-text text-break"><?= htmlspecialchars($file->name) ?></p>
+                            <form action="<?= route('admin.events.files.destroy', ['id' => $event->id, 'file_id' => $file->id]) ?>"
+                                  method="post">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
